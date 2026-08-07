@@ -138,14 +138,16 @@ Vì Frontend được xây dựng bằng thuần HTML/CSS/JS (ES Modules):
 
 ---
 
-## ⚡ Các Database Objects Nổi bật trong `cinema.sql`
+## ⚡ Kiến trúc Xử lý Nghiệp vụ & Database (Services Architecture)
 
-| Loại | Tên | Mô tả |
+Nghiệp vụ giữ ghế, đặt vé và thanh toán được đóng gói và xử lý trực tiếp tại tầng **Spring Boot Services**:
+
+| Thành phần | Lớp Service | Mô tả |
 |---|---|---|
-| **Stored Procedure** | `sp_seat_hold` | Khóa giữ ghế tạm thời (10 phút) dùng `FOR UPDATE` để chống trùng lặp ghế. |
-| **Stored Procedure** | `sp_payment_success` | Cập nhật hóa đơn thành `paid` và đổi trạng thái ghế sang `booked` sau khi thanh toán thành công. |
-| **Stored Procedure** | `sp_release_expired_seat` | Giải phóng các ghế quá thời hạn giữ (10 phút) về lại trạng thái trống. |
-| **Trigger** | `trg_after_booking_seat_insert` | Cập nhật tự động trạng thái ghế khi tạo đơn. |
+| **Giữ ghế (Seat Holding)** | `BookingService` | Kiểm tra trạng thái ghế trống, khóa giữ ghế sang trạng thái `holding` và ngăn chặn trùng lặp đặt ghế. |
+| **Xác nhận thanh toán** | `PaymentService` | Xử lý callback VNPay, trừ Coin tích lũy, đổi trạng thái ghế sang `booked`, tạo ticket code và gửi email. |
+| **Giải phóng ghế** | `PaymentService` | Tự động chuyển ghế về `available` khi giao dịch thanh toán thất bại hoặc hủy đơn. |
+| **Bảo mật & Mã hóa** | `VNPayService` | Tạo URL thanh toán bảo mật với mã hóa HMAC-SHA512 và xác thực chữ ký callback. |
 
 ---
 

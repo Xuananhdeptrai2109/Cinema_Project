@@ -19,7 +19,8 @@ import java.util.List;
 public class Invoice {
 
     @Id
-    @Column(name = "invoice_id", columnDefinition = "BINARY(16)")
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
+    @Column(name = "invoice_id", length = 36)
     private java.util.UUID invoiceId;
 
     @Column(name = "ticket_code", length = 10)

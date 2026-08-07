@@ -53,14 +53,18 @@ public class PaymentService {
         }
 
         // Cập nhật trạng thái ghế thành 'booked'
-        com.cinema.modules.seat.entity.Status bookedStatus = statusRepository
-                .findByStatusName(com.cinema.modules.seat.entity.Status.SeatStatusName.booked)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy trạng thái booked"));
+        try {
+            invoiceRepository.spPaymentSuccess(invoiceId.toString());
+        } catch (Exception ex) {
+            com.cinema.modules.seat.entity.Status bookedStatus = statusRepository
+                    .findByStatusName(com.cinema.modules.seat.entity.Status.SeatStatusName.booked)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy trạng thái booked"));
 
-        bookingSeatRepository.findByInvoice_InvoiceId(invoiceId).forEach(bs -> {
-            bs.getShowtimeSeat().setStatus(bookedStatus);
-            bs.getShowtimeSeat().setUserId(user.getUserId());
-        });
+            bookingSeatRepository.findByInvoice_InvoiceId(invoiceId).forEach(bs -> {
+                bs.getShowtimeSeat().setStatus(bookedStatus);
+                bs.getShowtimeSeat().setUserId(user.getUserId());
+            });
+        }
 
         invoiceRepository.save(invoice);
         emailService.sendTicketEmail(invoice);
@@ -72,5 +76,22 @@ public class PaymentService {
                 .orElseThrow(() -> new RuntimeException("Hóa đơn không tồn tại"));
         invoice.setInvoiceStatus("failed");
         invoiceRepository.save(invoice);
+
+        try {
+            invoiceRepository.spPaymentFail(invoiceId.toString());
+        } catch (Exception ex) {
+            com.cinema.modules.seat.entity.Status availableStatus = statusRepository
+                    .findByStatusName(com.cinema.modules.seat.entity.Status.SeatStatusName.available)
+                    .orElse(null);
+
+            if (availableStatus != null) {
+                bookingSeatRepository.findByInvoice_InvoiceId(invoiceId).forEach(bs -> {
+                    if (bs.getShowtimeSeat() != null) {
+                        bs.getShowtimeSeat().setStatus(availableStatus);
+                        bs.getShowtimeSeat().setUserId(null);
+                    }
+                });
+            }
+        }
     }
 }

@@ -14,4 +14,10 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
     List<Invoice> findByUserAndUsedCoinGreaterThanOrderByCreatedDatetimeDesc(User user, Integer usedCoin);
     List<Invoice> findByUserAndDiscountCodeIsNotNullOrderByCreatedDatetimeDesc(User user);
     boolean existsByUserAndDiscountCode(User user, String discountCode);
+
+    @org.springframework.data.jpa.repository.query.Procedure(procedureName = "sp_payment_success")
+    void spPaymentSuccess(@org.springframework.data.repository.query.Param("p_invoice_id") String invoiceId);
+
+    @org.springframework.data.jpa.repository.query.Procedure(procedureName = "sp_payment_fail")
+    void spPaymentFail(@org.springframework.data.repository.query.Param("p_invoice_id") String invoiceId);
 }

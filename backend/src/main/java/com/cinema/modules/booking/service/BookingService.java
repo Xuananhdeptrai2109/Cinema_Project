@@ -23,6 +23,7 @@ public class BookingService {
     @Autowired private ShowtimeSeatRepository showtimeSeatRepository;
     @Autowired private ProductRepository productRepository;
     @Autowired private DiscountRepository discountRepository;
+    @Autowired private com.cinema.modules.seat.repository.StatusRepository statusRepository;
 
     @Transactional
     public Invoice createBooking(BookingRequest request) {
@@ -71,8 +72,34 @@ public class BookingService {
     private BigDecimal calculateSeats(BookingRequest req, Invoice inv) {
         BigDecimal total = BigDecimal.ZERO;
         if (req.getShowtimeSeatIds() == null) return total;
+
+        com.cinema.modules.seat.entity.Status holdingStatus = statusRepository
+                .findByStatusName(com.cinema.modules.seat.entity.Status.SeatStatusName.holding)
+                .orElse(null);
+
         for (Long id : req.getShowtimeSeatIds()) {
-            ShowtimeSeat ss = showtimeSeatRepository.findById(id).orElseThrow();
+            ShowtimeSeat ss = showtimeSeatRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy ghế có ID: " + id));
+
+            if (ss.getStatus() != null && ss.getStatus().getStatusName() != com.cinema.modules.seat.entity.Status.SeatStatusName.available) {
+                String seatName = ss.getSeat() != null ? (ss.getSeat().getRowName() + ss.getSeat().getSeatNumber()) : id.toString();
+                throw new RuntimeException("Ghế " + seatName + " đã được đặt hoặc đang ở trạng thái giữ.");
+            }
+
+            if (holdingStatus != null) {
+                try {
+                    showtimeSeatRepository.spSeatHold(
+                            ss.getShowtime().getShowtimeId(),
+                            ss.getSeat().getSeatId(),
+                            req.getUserId()
+                    );
+                } catch (Exception ex) {
+                    // Fallback in case procedure throws error
+                    ss.setStatus(holdingStatus);
+                    showtimeSeatRepository.save(ss);
+                }
+            }
+
             BookingSeat bs = new BookingSeat();
             bs.setInvoice(inv);
             bs.setShowtimeSeat(ss);
