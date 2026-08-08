@@ -41,10 +41,14 @@ public class SecurityConfig {
                 "/favicon.ico",
                 "/static/**",
                 "/resources/**",
+                "/uploads/**",
                 "/css/**",
                 "/js/**",
                 "/images/**",
-                "/frontend/"
+                "/frontend/**",
+                "/api/v1/admin/upload",
+                "/api/v1/upload",
+                "/upload"
         );
     }
 
@@ -54,7 +58,7 @@ public class SecurityConfig {
                 // 1. CẤU HÌNH CORS VÀ VÔ HIỆU HÓA CSRF
                 .cors(cors -> cors.configurationSource(request -> {
                     var config = new org.springframework.web.cors.CorsConfiguration();
-                    config.setAllowedOrigins(java.util.List.of("http://localhost:63342", "http://127.0.0.1:5500", "http://localhost:5500"));
+                    config.setAllowedOriginPatterns(java.util.List.of("*"));
                     config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     config.setAllowedHeaders(java.util.List.of("*"));
                     config.setAllowCredentials(true);
@@ -65,7 +69,15 @@ public class SecurityConfig {
                 // 2. CẤU HÌNH PHÂN QUYỀN (CHỈ DÙNG MỘT KHỐI DUY NHẤT)
                 .authorizeHttpRequests(auth -> auth
 
-                        .requestMatchers("/frontend/**", "/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
+                        // UPLOAD FILE: phải đặt TRƯỚC luật /api/v1/admin/** để được ưu tiên
+                        .requestMatchers("/api/v1/admin/upload").permitAll()
+                        .requestMatchers("/api/v1/upload").permitAll()
+                        .requestMatchers("/upload").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/admin/upload").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/upload").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/upload").permitAll()
+
+                        .requestMatchers("/frontend/**", "/uploads/**", "/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
                         .requestMatchers("/vnpay-return.html").permitAll()
 
                         .requestMatchers("/api/payment/vnpay-callback", "/api/payment/vnpay-verify", "/api/payment/vnpay-ipn").permitAll()
@@ -74,6 +86,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         .requestMatchers("/api/auth/**", "/api/home/**").permitAll()
+                        .requestMatchers("/api/v1/admin/**").hasAnyAuthority("admin", "ROLE_admin")
                         .requestMatchers("/api/movies/**", "/api/genres/**", "/api/cinemas/**", "/api/cities/**").permitAll()
                         .requestMatchers("/api/showtimes/**", "/api/showtime-seats/**", "/api/products/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/comments/movie/**").permitAll()

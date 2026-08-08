@@ -22,6 +22,9 @@ public class PaymentController {
     @Autowired private InvoiceRepository invoiceRepository;
     @Autowired private BookingSeatRepository bookingSeatRepository;
 
+    @org.springframework.beans.factory.annotation.Value("${vnpay.frontend-return-url:http://127.0.0.1:5500/frontend/pages/vnpay-return.html}")
+    private String frontendReturnUrl;
+
     // Bước 4: Frontend gọi để lấy URL → redirect sang VNPay
     @PostMapping("/vnpay-create")
     public ResponseEntity<?> createPayment(@RequestBody Map<String, Object> payload) {
@@ -83,8 +86,9 @@ public class PaymentController {
                 paymentService.failPayment(invoiceId, "VNPay response code: " + responseCode);
             }
 
+            String redirectUrl = frontendReturnUrl + (frontendReturnUrl.contains("?") ? "&" : "?") + qs;
             return ResponseEntity.status(302)
-                    .header("Location", "http://127.0.0.1:5500/frontend/%20pages/vnpay-return.html?" + qs)
+                    .header("Location", redirectUrl)
                     .build();
 
         } catch (Exception e) {

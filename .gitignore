@@ -1,0 +1,20 @@
+# IDE & Tool Folders
+.idea/
+.ai/
+.vscode/
+
+# Maven Build & Target Outputs
+backend/target/
+target/
+*.class
+
+# Environment Variables & Confidential Credentials
+backend/.env
+.env
+
+# Log files
+*.log
+
+# OS Generated Files
+.DS_Store
+Thumbs.db

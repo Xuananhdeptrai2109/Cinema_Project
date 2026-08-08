@@ -19,4 +19,14 @@ public interface ShowtimeSeatRepository extends JpaRepository<ShowtimeSeat, Long
 
     // 3. Tìm danh sách ghế theo trạng thái (VD: lấy các ghế đang trống - 'available')
     List<ShowtimeSeat> findByShowtime_ShowtimeIdAndStatus(Long showtimeId, String status);
+
+    @org.springframework.data.jpa.repository.query.Procedure(procedureName = "sp_seat_hold")
+    void spSeatHold(
+            @Param("p_showtime_id") Long showtimeId,
+            @Param("p_seat_id") Long seatId,
+            @Param("p_user_id") Long userId
+    );
+
+    @org.springframework.data.jpa.repository.query.Procedure(procedureName = "sp_release_expired_seat")
+    void spReleaseExpiredSeat();
 }

@@ -21,14 +21,12 @@ public class MovieServiceImpl implements MovieService {
     @Override
     @Transactional(readOnly = true)
     public List<MovieResponse> getNowShowing() {
-        // Gọi hàm dùng chung với tham số "now"
-        return getMoviesByStatus("showing");
+        return getMoviesByStatus("now_showing");
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<MovieResponse> getComingSoon() {
-        // Gọi hàm dùng chung với tham số "coming"
         return getMoviesByStatus("coming_soon");
     }
 
@@ -39,12 +37,12 @@ public class MovieServiceImpl implements MovieService {
         Movie movie = movieRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy phim với ID: " + id));
 
-        // 2. Map từ Entity sang Response (Tận dụng logic bạn đã viết)
+        // 2. Map từ Entity sang Response
         MovieResponse res = new MovieResponse();
 
         res.setId(movie.getId());
         res.setTitle(movie.getTitle());
-        res.setPosterLink(movie.getPosterLink());
+        res.setPosterLink(sanitizePosterLink(movie.getPosterLink()));
         res.setLanguage(movie.getLanguage());
         res.setDescription(movie.getDescription());
         res.setReleaseDate(movie.getReleaseDate());
@@ -71,11 +69,33 @@ public class MovieServiceImpl implements MovieService {
         return res;
     }
 
+    private String sanitizePosterLink(String link) {
+        if (link == null || link.isBlank()) return link;
+        if (link.contains("www.themoviedb.org/t/p/")) {
+            return link.replace("www.themoviedb.org/t/p/w1280/", "image.tmdb.org/t/p/w500/")
+                       .replace("www.themoviedb.org/t/p/", "image.tmdb.org/t/p/w500/");
+        }
+        return link;
+    }
+
     @Override
     @Transactional(readOnly = true)
     public List<MovieResponse> getMoviesByStatus(String status) {
-        // 1. Lấy danh sách Entity từ Repository
-        List<Movie> movies = movieRepository.findByStatus(status);
+        // 1. Lấy danh sách Entity từ Repository (Hỗ trợ alias 'showing' và 'now_showing')
+        List<Movie> movies;
+        if ("showing".equalsIgnoreCase(status) || "now_showing".equalsIgnoreCase(status)) {
+            movies = movieRepository.findByStatus("now_showing");
+            if (movies.isEmpty()) {
+                movies = movieRepository.findByStatus("showing");
+            }
+        } else {
+            movies = movieRepository.findByStatus(status);
+        }
+
+        // Fallback: Nếu không tìm thấy theo status chỉ định, lấy tất cả phim từ DB
+        if (movies.isEmpty()) {
+            movies = movieRepository.findAll();
+        }
 
         // 2. Chuyển đổi (Map) từng Movie sang MovieResponse
         return movies.stream().map(movie -> {
@@ -83,7 +103,7 @@ public class MovieServiceImpl implements MovieService {
 
             res.setId(movie.getId());
             res.setTitle(movie.getTitle());
-            res.setPosterLink(movie.getPosterLink()); // Ánh xạ từ poster_link
+            res.setPosterLink(sanitizePosterLink(movie.getPosterLink()));
             res.setLanguage(movie.getLanguage());
             res.setDescription(movie.getDescription());
             res.setReleaseDate(movie.getReleaseDate());

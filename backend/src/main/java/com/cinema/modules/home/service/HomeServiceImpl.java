@@ -28,17 +28,37 @@ public class HomeServiceImpl implements HomeService {
     public HomeResponse getHomeData() {
         HomeResponse response = new HomeResponse();
 
-        // 1. Lấy phim đang chiếu (Status: SHOWING)
-        response.setShowingMovies(movieService.getMoviesByStatus("showing"));
+        // 1. Lấy phim đang chiếu
+        try {
+            response.setShowingMovies(movieService.getMoviesByStatus("now_showing"));
+        } catch (Exception e) {
+            System.err.println("Lỗi lấy phim đang chiếu: " + e.getMessage());
+            response.setShowingMovies(java.util.Collections.emptyList());
+        }
 
-        // 2. Lấy phim sắp chiếu (Status: UPCOMING)
-        response.setUpcomingMovies(movieService.getMoviesByStatus("coming_soon"));
+        // 2. Lấy phim sắp chiếu
+        try {
+            response.setUpcomingMovies(movieService.getMoviesByStatus("coming_soon"));
+        } catch (Exception e) {
+            System.err.println("Lỗi lấy phim sắp chiếu: " + e.getMessage());
+            response.setUpcomingMovies(java.util.Collections.emptyList());
+        }
 
-        // 3. Hệ thống rạp: Lấy danh sách vị trí kèm danh sách rạp bên trong
-        response.setLocations(cinemaService.getAllLocationsWithCinemas());
+        // 3. Hệ thống rạp
+        try {
+            response.setLocations(cinemaService.getAllLocationsWithCinemas());
+        } catch (Exception e) {
+            System.err.println("Lỗi lấy danh sách rạp: " + e.getMessage());
+            response.setLocations(java.util.Collections.emptyList());
+        }
 
         // 4. Lấy các chương trình khuyến mãi/ưu đãi
-        response.setPromotions(discountService.getActivePromotions());
+        try {
+            response.setPromotions(discountService.getActivePromotions());
+        } catch (Exception e) {
+            System.err.println("Lỗi lấy danh sách khuyến mãi: " + e.getMessage());
+            response.setPromotions(java.util.Collections.emptyList());
+        }
 
         return response;
     }

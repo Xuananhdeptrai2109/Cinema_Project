@@ -12,9 +12,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import java.util.Collection;
 import java.util.Collections;
 
-enum UserRole {
-    admin, customer
-}
 
 @Entity
 @Table(name = "User")

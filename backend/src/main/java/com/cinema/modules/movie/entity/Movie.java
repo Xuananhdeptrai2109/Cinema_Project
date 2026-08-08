@@ -19,11 +19,12 @@ public class Movie {
 
     private String title;
 
-    @Column(name = "poster_link") // Ánh xạ đúng cột poster_link trong DB
+    @Column(name = "poster_link", columnDefinition = "LONGTEXT")
     private String posterLink;
 
     private String language;
 
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
     @Column(name = "release_date")
@@ -34,7 +35,7 @@ public class Movie {
     @Column(name = "age_rating")
     private String ageRating;
 
-    @Column(name = "trailer_link")
+    @Column(name = "trailer_link", columnDefinition = "LONGTEXT")
     private String trailerLink;
 
     private String status;
