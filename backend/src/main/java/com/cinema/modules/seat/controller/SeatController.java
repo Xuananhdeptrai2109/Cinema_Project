@@ -20,4 +20,9 @@ public class SeatController {
     public List<SeatResponse> getSeats(@RequestParam Long showtimeId) {
         return seatService.getSeatsByShowtime(showtimeId);
     }
+
+    @GetMapping("/seat-types")
+    public List<com.cinema.modules.seat.entity.SeatType> getSeatTypes() {
+        return seatService.getAllSeatTypes();
+    }
 }

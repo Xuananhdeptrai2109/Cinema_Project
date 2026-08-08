@@ -74,6 +74,8 @@ public class AdminRoomController {
             return ApiResponse.error(404, "Không tìm thấy phòng chiếu với ID: " + id);
         }
 
+        ensureFiveSeatTypesExist();
+
         // Đọc trực tiếp danh sách loại ghế từ MySQL Database
         List<SeatType> seatTypes = seatTypeRepository.findAll();
 
@@ -204,6 +206,36 @@ public class AdminRoomController {
             }
         }
         return ApiResponse.error(404, "Không tìm thấy phòng chiếu với ID: " + id);
+    }
+
+    private void ensureFiveSeatTypesExist() {
+        String[] defaultNames = {"Thường", "VIP", "Sweetbox", "Couple", "Cao cấp"};
+        java.math.BigDecimal[] defaultPrices = {
+                new java.math.BigDecimal("80000"),
+                new java.math.BigDecimal("110000"),
+                new java.math.BigDecimal("160000"),
+                new java.math.BigDecimal("180000"),
+                new java.math.BigDecimal("220000")
+        };
+
+        // Ghi đè bắt buộc đúng 5 tên loại ghế chuẩn vào ID 1->5
+        for (int i = 0; i < 5; i++) {
+            Long targetId = (long) (i + 1);
+            SeatType st = seatTypeRepository.findById(targetId).orElseGet(SeatType::new);
+            st.setTypeName(defaultNames[i]);
+            if (st.getPrice() == null) st.setPrice(defaultPrices[i]);
+            seatTypeRepository.save(st);
+        }
+
+        // Xóa tất cả các bản ghi thừa ngoài 5 loại chuẩn hoặc có chứa sofa/bed trong CSDL
+        try {
+            List<SeatType> allTypes = seatTypeRepository.findAll();
+            for (SeatType st : allTypes) {
+                if (st.getSeatTypeId() > 5 || st.getTypeName().toLowerCase().contains("sofa") || st.getTypeName().toLowerCase().contains("bed")) {
+                    seatTypeRepository.delete(st);
+                }
+            }
+        } catch (Exception ignored) {}
     }
 
     private AdminRoomDTO mapToDto(Room room) {

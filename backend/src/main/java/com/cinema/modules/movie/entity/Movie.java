@@ -24,7 +24,7 @@ public class Movie {
 
     private String language;
 
-    @Column(name = "description", columnDefinition = "TEXT")
+    @Column(name = "description", columnDefinition = "LONGTEXT")
     private String description;
 
     @Column(name = "release_date")

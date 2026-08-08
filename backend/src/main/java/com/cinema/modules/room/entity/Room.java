@@ -22,5 +22,6 @@ public class Room {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "screening_format_id", nullable = false)
+    @org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
     private ScreeningFormat screeningFormat;
 }
