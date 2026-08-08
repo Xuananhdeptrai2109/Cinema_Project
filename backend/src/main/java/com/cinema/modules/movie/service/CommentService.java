@@ -32,15 +32,20 @@ public class CommentService {
 
     @Transactional
     public CommentResponse saveComment(String email, CommentRequest request) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User không tồn tại"));
+        String cleanEmail = email != null ? email.trim() : "";
+        User user = userRepository.findByEmail(cleanEmail)
+                .orElseGet(() -> userRepository.findAll().stream()
+                        .filter(u -> u.getEmail() != null && u.getEmail().equalsIgnoreCase(cleanEmail))
+                        .findFirst()
+                        .orElseThrow(() -> new RuntimeException("Tài khoản người dùng (" + cleanEmail + ") không tồn tại")));
 
         Movie movie = movieRepository.findById(request.getMovieId())
                 .orElseThrow(() -> new RuntimeException("Phim không tồn tại"));
 
-        // CHẶN: Chỉ cho phép đánh giá nếu trạng thái phim là "showing"
-        if (!"showing".equalsIgnoreCase(movie.getStatus())) {
-            throw new RuntimeException("Chương trình đánh giá chỉ áp dụng cho phim đang chiếu.");
+        // CHẶN: Chỉ chặn đánh giá nếu phim là sắp chiếu (coming_soon)
+        String status = movie.getStatus() != null ? movie.getStatus().toLowerCase() : "";
+        if ("coming_soon".equals(status)) {
+            throw new RuntimeException("Chương trình đánh giá không áp dụng cho phim sắp chiếu.");
         }
 
         // 1. Khởi tạo và gán giá trị thủ công để đảm bảo không mất dữ liệu
@@ -79,5 +84,35 @@ public class CommentService {
                 .stream()
                 .map(CommentResponse::new)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void deleteComment(String email, Long commentId) {
+        MovieComment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("Bình luận không tồn tại"));
+
+        String cleanEmail = email != null ? email.trim() : "";
+        User user = userRepository.findByEmail(cleanEmail)
+                .orElseGet(() -> userRepository.findAll().stream()
+                        .filter(u -> u.getEmail() != null && u.getEmail().equalsIgnoreCase(cleanEmail))
+                        .findFirst()
+                        .orElseThrow(() -> new RuntimeException("Tài khoản người dùng không tồn tại")));
+
+        boolean isOwner = comment.getUser() != null && (
+                comment.getUser().getUserId().equals(user.getUserId()) ||
+                (comment.getUser().getEmail() != null && comment.getUser().getEmail().equalsIgnoreCase(user.getEmail()))
+        );
+        boolean isAdmin = user.getRole() != null && "admin".equalsIgnoreCase(user.getRole().name());
+
+        if (!isOwner && !isAdmin) {
+            throw new RuntimeException("Bạn không có quyền xóa bình luận này!");
+        }
+
+        Movie movie = comment.getMovie();
+        commentRepository.delete(comment);
+
+        if (movie != null) {
+            updateMovieAverageStar(movie);
+        }
     }
 }
