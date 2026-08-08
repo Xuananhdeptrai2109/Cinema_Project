@@ -93,7 +93,7 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/users/me/**").hasAnyAuthority("customer", "admin", "ROLE_customer", "ROLE_admin")
                         .requestMatchers("/api/users/profile/**").hasAnyAuthority("customer", "admin", "ROLE_customer", "ROLE_admin")
-                        .requestMatchers("/api/comments").hasAnyAuthority("customer", "admin", "ROLE_customer", "ROLE_admin")
+                        .requestMatchers("/api/comments/**", "/api/comments").authenticated()
                         .requestMatchers("/api/invoices/**", "/api/payment/**", "/api/booking/**").hasAnyAuthority("customer", "ROLE_customer")
                         .requestMatchers("/api/discounts/check").permitAll()
 
