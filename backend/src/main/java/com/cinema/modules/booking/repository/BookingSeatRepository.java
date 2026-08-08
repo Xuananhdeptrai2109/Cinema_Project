@@ -25,4 +25,10 @@ public interface BookingSeatRepository extends JpaRepository<BookingSeat, Long> 
     // Lấy số ghế theo invoiceId (UUID)
     @Query("SELECT bs.showtimeSeat.seat.seatNumber FROM BookingSeat bs WHERE bs.invoice.invoiceId = :invoiceId")
     List<String> findSeatNumbersByInvoiceId(@Param("invoiceId") UUID invoiceId);
+
+    @Query("SELECT COUNT(bs) FROM BookingSeat bs WHERE bs.invoice.invoiceStatus = 'paid'")
+    Long countTicketsSold();
+
+    @Query("SELECT COUNT(bs) FROM BookingSeat bs WHERE bs.invoice.invoiceStatus = 'paid' AND DATE(bs.invoice.paidAt) = CURRENT_DATE")
+    Long countTodayTicketsSold();
 }

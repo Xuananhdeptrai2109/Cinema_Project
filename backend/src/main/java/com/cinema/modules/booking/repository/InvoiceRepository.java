@@ -15,6 +15,14 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
     List<Invoice> findByUserAndDiscountCodeIsNotNullOrderByCreatedDatetimeDesc(User user);
     boolean existsByUserAndDiscountCode(User user, String discountCode);
 
+    @org.springframework.data.jpa.repository.Query("SELECT COALESCE(SUM(i.finalPrice), 0) FROM Invoice i WHERE i.invoiceStatus = 'paid'")
+    Double sumTotalRevenue();
+
+    @org.springframework.data.jpa.repository.Query("SELECT COALESCE(SUM(i.finalPrice), 0) FROM Invoice i WHERE i.invoiceStatus = 'paid' AND DATE(i.paidAt) = CURRENT_DATE")
+    Double sumTodayRevenue();
+
+    List<Invoice> findTop20ByOrderByCreatedDatetimeDesc();
+
     @org.springframework.data.jpa.repository.query.Procedure(procedureName = "sp_payment_success")
     void spPaymentSuccess(@org.springframework.data.repository.query.Param("p_invoice_id") String invoiceId);
 

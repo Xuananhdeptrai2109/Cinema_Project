@@ -25,7 +25,7 @@ public class Cinema {
     @Column(name = "hotline") // Khớp với SQL: hotline
     private String hotline;
 
-    @Column(name = "imageUrl") // Khớp với SQL: imageUrl (viết liền)
+    @Column(name = "imageUrl", columnDefinition = "LONGTEXT")
     private String imageUrl;
 
     @Column(name = "mapUrl") // Khớp với SQL: mapUrl (viết liền)

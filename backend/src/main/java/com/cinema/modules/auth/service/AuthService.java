@@ -43,26 +43,31 @@ public class AuthService {
         user.setUserName(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setCoin(0);
 
         User savedUser = authRepository.save(user);
 
         String token = jwtUtil.generateToken(user.getEmail());
-        return new AuthResponse(token, "Đăng kí thành công", savedUser.getUserId(), savedUser.getUserName());
+        String roleStr = savedUser.getRole() != null ? savedUser.getRole().name() : "customer";
+        return new AuthResponse(token, "Đăng ký thành công", savedUser.getUserId(), savedUser.getUserName(), roleStr);
     }
 
-    // LOGIN
+    // LOGIN (Hỗ trợ đăng nhập bằng Email HOẶC Username)
     public AuthResponse login(LoginRequest request) {
+        String identifier = request.getEmail() != null ? request.getEmail().trim() : "";
 
-        User user = authRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+        User user = authRepository.findByEmail(identifier)
+                .or(() -> authRepository.findByUserName(identifier))
+                .orElseThrow(() -> new RuntimeException("Tài khoản hoặc email không tồn tại"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Sai mật khẩu");
         }
 
         String token = jwtUtil.generateToken(user.getEmail());
+        String roleStr = user.getRole() != null ? user.getRole().name() : "customer";
 
-        return new AuthResponse(token, "Đăng nhập thành công", user.getUserId(), user.getUserName());
+        return new AuthResponse(token, "Đăng nhập thành công", user.getUserId(), user.getUserName(), roleStr);
     }
 
     // GỬI OTP

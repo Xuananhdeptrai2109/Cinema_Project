@@ -17,17 +17,21 @@ public class DiscountServiceImpl implements DiscountService {
 
     @Override
     public List<DiscountResponse> getActivePromotions() {
-        // Lấy danh sách từ DB và chuyển đổi sang DiscountResponse[cite: 21]
-        return discountRepository.findAll().stream()
-                .filter(d -> !Boolean.TRUE.equals(d.getIsUsed())) // Chỉ lấy mã chưa bị khóa[cite: 6]
-                .map(d -> new DiscountResponse(
-                        d.getDiscountTitle(),
-                        d.getDiscountDescription(),
-                        d.getDiscountCode(),
-                        d.getDiscountType().name(),
-                        d.getDiscountValue(),
-                        d.getStartDate(),
-                        d.getEndDate()
-                )).toList();
+        try {
+            return discountRepository.findAll().stream()
+                    .filter(d -> !Boolean.TRUE.equals(d.getIsUsed()))
+                    .map(d -> new DiscountResponse(
+                            d.getDiscountTitle(),
+                            d.getDiscountDescription(),
+                            d.getDiscountCode(),
+                            d.getDiscountType() != null ? d.getDiscountType().name() : "percent",
+                            d.getDiscountValue(),
+                            d.getStartDate(),
+                            d.getEndDate()
+                    )).toList();
+        } catch (Exception e) {
+            System.err.println("Lỗi đọc khuyến mãi: " + e.getMessage());
+            return new ArrayList<>();
+        }
     }
 }
