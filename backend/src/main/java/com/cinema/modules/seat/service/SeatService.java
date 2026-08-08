@@ -24,6 +24,11 @@ public class SeatService {
     private final PhysicalSeatRepository physicalSeatRepository;
     private final ShowtimeRepository showtimeRepository;
     private final StatusRepository statusRepository;
+    private final com.cinema.modules.seat.repository.SeatTypeRepository seatTypeRepository;
+
+    public List<com.cinema.modules.seat.entity.SeatType> getAllSeatTypes() {
+        return seatTypeRepository.findAll();
+    }
 
     @Transactional
     public List<SeatResponse> getSeatsByShowtime(Long showtimeId) {

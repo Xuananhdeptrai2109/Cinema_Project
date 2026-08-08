@@ -54,7 +54,7 @@ public class AdminMovieController {
             String cleanName = name.trim();
             if (cleanName.isEmpty()) continue;
 
-            Director d = directorRepository.findByDirectorName(cleanName)
+            Director d = directorRepository.findFirstByDirectorName(cleanName)
                     .orElseGet(() -> {
                         Director newDir = new Director();
                         newDir.setDirectorName(cleanName);
@@ -72,44 +72,61 @@ public class AdminMovieController {
 
     @PutMapping("/{id}")
     public ApiResponse<AdminMovieResponseDTO> updateMovie(@PathVariable Long id, @RequestBody AdminMovieRequestDTO dto) {
-        return movieRepository.findById(id).map(movie -> {
-            if (dto.getTitle() != null) movie.setTitle(dto.getTitle());
-            if (dto.getPosterLink() != null) movie.setPosterLink(dto.getPosterLink());
-            if (dto.getLanguage() != null) movie.setLanguage(dto.getLanguage());
-            if (dto.getDescription() != null) movie.setDescription(dto.getDescription());
-            if (dto.getReleaseDate() != null) movie.setReleaseDate(dto.getReleaseDate());
-            if (dto.getDuration() != null) movie.setDuration(dto.getDuration());
-            if (dto.getAgeRating() != null) movie.setAgeRating(dto.getAgeRating());
-            if (dto.getTrailerLink() != null) movie.setTrailerLink(dto.getTrailerLink());
-            if (dto.getStatus() != null) movie.setStatus(dto.getStatus());
+        try {
+            return movieRepository.findById(id).map(movie -> {
+                if (dto.getTitle() != null) movie.setTitle(dto.getTitle());
+                if (dto.getPosterLink() != null) movie.setPosterLink(dto.getPosterLink());
+                if (dto.getLanguage() != null) movie.setLanguage(dto.getLanguage());
+                if (dto.getDescription() != null) movie.setDescription(dto.getDescription());
+                if (dto.getReleaseDate() != null) movie.setReleaseDate(dto.getReleaseDate());
+                if (dto.getDuration() != null) movie.setDuration(dto.getDuration());
+                if (dto.getAgeRating() != null) movie.setAgeRating(dto.getAgeRating());
+                if (dto.getTrailerLink() != null) movie.setTrailerLink(dto.getTrailerLink());
+                if (dto.getStatus() != null) movie.setStatus(dto.getStatus());
 
-            if (dto.getDirectorName() != null && !dto.getDirectorName().isBlank()) {
-                String dirNameInput = dto.getDirectorName().trim();
-                String[] dNames = dirNameInput.split("[,;]+");
-                Director pDirector = null;
+                if (dto.getDirectorName() != null && !dto.getDirectorName().isBlank()) {
+                    String dirNameInput = dto.getDirectorName().trim();
+                    String[] dNames = dirNameInput.split("[,;]+");
+                    Director pDirector = null;
 
-                for (String name : dNames) {
-                    String cleanName = name.trim();
-                    if (cleanName.isEmpty()) continue;
+                    for (String name : dNames) {
+                        String cleanName = name.trim();
+                        if (cleanName.isEmpty()) continue;
 
-                    Director d = directorRepository.findByDirectorName(cleanName)
-                            .orElseGet(() -> {
-                                Director newDir = new Director();
-                                newDir.setDirectorName(cleanName);
-                                return directorRepository.save(newDir);
-                            });
-                    if (pDirector == null) {
-                        pDirector = d;
+                        Director d = directorRepository.findFirstByDirectorName(cleanName)
+                                .orElseGet(() -> {
+                                    Director newDir = new Director();
+                                    newDir.setDirectorName(cleanName);
+                                    return directorRepository.save(newDir);
+                                });
+                        if (pDirector == null) {
+                            pDirector = d;
+                        }
+                    }
+                    if (pDirector != null) {
+                        movie.setDirector(pDirector);
                     }
                 }
-                if (pDirector != null) {
-                    movie.setDirector(pDirector);
-                }
-            }
 
-            Movie updated = movieRepository.save(movie);
-            return ApiResponse.success(mapToDto(updated), "Cập nhật thông tin phim thành công");
-        }).orElse(ApiResponse.error(404, "Không tìm thấy phim với ID: " + id));
+                Movie updated = movieRepository.save(movie);
+                return ApiResponse.success(mapToDto(updated), "Cập nhật thông tin phim thành công");
+            }).orElse(ApiResponse.error(404, "Không tìm thấy phim với ID: " + id));
+        } catch (Exception e) {
+            return ApiResponse.error(500, "Lỗi khi cập nhật phim: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/{id}/status")
+    public ApiResponse<AdminMovieResponseDTO> updateMovieStatus(@PathVariable Long id, @RequestParam String status) {
+        try {
+            return movieRepository.findById(id).map(movie -> {
+                movie.setStatus(status);
+                Movie updated = movieRepository.save(movie);
+                return ApiResponse.success(mapToDto(updated), "Cập nhật trạng thái phim thành công");
+            }).orElse(ApiResponse.error(404, "Không tìm thấy phim với ID: " + id));
+        } catch (Exception e) {
+            return ApiResponse.error(500, "Lỗi khi cập nhật trạng thái phim: " + e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
