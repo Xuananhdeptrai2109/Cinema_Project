@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer" />
+    <title>Cinema Management - Admin Portal</title>
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Admin CSS -->
+    <link rel="stylesheet" href="../../css/admin.css">
+</head>
+<body class="admin-body">
+    <!-- Sidebar Navigation -->
+    <aside class="admin-sidebar" id="adminSidebar">
+        <div class="sidebar-header">
+            <div class="logo-box">
+                <i class="fa-solid fa-film logo-icon"></i>
+                <span class="logo-text">CINEMA<span>ADMIN</span></span>
+            </div>
+            <button class="btn-collapse-sidebar" id="btnCollapseSidebar" title="Thu gọn / Mở rộng menu">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+        </div>
+
+        <nav class="sidebar-menu">
+            <div class="menu-label">MENU CHÍNH</div>
+            <a href="#dashboard" class="nav-item active" data-section="dashboard-section" data-tooltip="Thống kê tổng quan">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Thống kê tổng quan</span>
+            </a>
+            <a href="#movies" class="nav-item" data-section="movies-section" data-tooltip="Quản lý Phim">
+                <i class="fa-solid fa-clapperboard"></i>
+                <span>Quản lý Phim</span>
+            </a>
+            <a href="#showtimes" class="nav-item" data-section="showtimes-section" data-tooltip="Quản lý Lịch chiếu">
+                <i class="fa-solid fa-clock"></i>
+                <span>Quản lý Lịch chiếu</span>
+            </a>
+            <a href="#invoices" class="nav-item" data-section="invoices-section" data-tooltip="Quản lý Hóa đơn">
+                <i class="fa-solid fa-file-invoice-dollar"></i>
+                <span>Quản lý Hóa đơn</span>
+            </a>
+            <a href="#users" class="nav-item" data-section="users-section" data-tooltip="Quản lý Khách hàng">
+                <i class="fa-solid fa-users"></i>
+                <span>Quản lý Khách hàng</span>
+            </a>
+            <a href="#discounts" class="nav-item" data-section="discounts-section" data-tooltip="Quản lý Mã giảm giá">
+                <i class="fa-solid fa-ticket-simple"></i>
+                <span>Quản lý Mã giảm giá</span>
+            </a>
+            <a href="#products" class="nav-item" data-section="products-section" data-tooltip="Quản lý Bắp Nước">
+                <i class="fa-solid fa-bowl-food"></i>
+                <span>Quản lý Bắp Nước</span>
+            </a>
+            <a href="#cinemas" class="nav-item" data-section="cinemas-section" data-tooltip="Quản lý Rạp chiếu">
+                <i class="fa-solid fa-building"></i>
+                <span>Quản lý Rạp chiếu</span>
+            </a>
+
+            <div class="menu-label">HỆ THỐNG</div>
+            <a href="../home.html" class="nav-item" data-tooltip="Xem Trang Khách">
+                <i class="fa-solid fa-globe"></i>
+                <span>Xem Trang Khách</span>
+            </a>
+            <a href="#" class="nav-item btn-logout" id="btnLogout" data-tooltip="Đăng xuất">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Đăng xuất</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <main class="admin-main">
+        <!-- Top Navbar -->
+        <header class="admin-header">
+            <div class="header-left">
+                <button class="btn-toggle-sidebar" id="btnToggleSidebar">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div class="page-title-box">
+                    <h1 id="currentPageTitle">Thống Kê Tổng Quan</h1>
+                    <p class="subtitle">Báo cáo & Quản trị hệ thống đặt vé rạp chiếu phim</p>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <div class="user-profile">
+                    <img src="https://ui-avatars.com/api/?name=Admin+Cinema&background=6366f1&color=fff" alt="Admin Avatar" class="avatar">
+                    <div class="user-info">
+                        <span class="name">Quản trị viên</span>
+                        <span class="role"><i class="fa-solid fa-shield-halved"></i> Administrator</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dynamic Sections Container -->
+        <div class="content-container">
+
+            <!-- SECTION 1: DASHBOARD ANALYTICS -->
+            <section id="dashboard-section" class="content-section active">
+                <div class="metrics-grid">
+                    <div class="metric-card card-revenue">
+                        <div class="card-icon"><i class="fa-solid fa-wallet"></i></div>
+                        <div class="card-info">
+                            <span class="card-label">TỔNG DOANH THU</span>
+                            <h2 class="card-value" id="valTotalRevenue">0 ₫</h2>
+                            <span class="card-trend trend-up"><i class="fa-solid fa-arrow-trend-up"></i> Hôm nay: <strong id="valTodayRevenue">0 ₫</strong></span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card card-tickets">
+                        <div class="card-icon"><i class="fa-solid fa-ticket"></i></div>
+                        <div class="card-info">
+                            <span class="card-label">VÉ ĐÃ BÁN</span>
+                            <h2 class="card-value" id="valTicketsSold">0</h2>
+                            <span class="card-trend trend-up"><i class="fa-solid fa-arrow-trend-up"></i> Hôm nay: <strong id="valTodayTickets">0 vé</strong></span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card card-movies">
+                        <div class="card-icon"><i class="fa-solid fa-film"></i></div>
+                        <div class="card-info">
+                            <span class="card-label">PHIM ĐANG CHIẾU</span>
+                            <h2 class="card-value" id="valActiveMovies">0</h2>
+                            <span class="card-trend"><i class="fa-solid fa-video"></i> Đang hoạt động trên toàn rạp</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card card-users">
+                        <div class="card-icon"><i class="fa-solid fa-users"></i></div>
+                        <div class="card-info">
+                            <span class="card-label">KHÁCH HÀNG</span>
+                            <h2 class="card-value" id="valTotalCustomers">0</h2>
+                            <span class="card-trend"><i class="fa-solid fa-user-check"></i> Tài khoản đã đăng ký</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="panel chart-panel">
+                        <div class="panel-header">
+                            <h3><i class="fa-solid fa-chart-area"></i> Biểu đồ Doanh Thu 7 Ngày Gần Nhất</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="panel activity-panel">
+                        <div class="panel-header">
+                            <h3><i class="fa-solid fa-clock-rotate-left"></i> Giao dịch mới nhất</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Mã HĐ</th>
+                                        <th>Khách hàng</th>
+                                        <th>Tổng tiền</th>
+                                        <th>Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyRecentInvoices">
+                                    <tr><td colspan="4" class="text-center">Đang tải dữ liệu...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 2: MOVIE MANAGEMENT -->
+            <section id="movies-section" class="content-section">
+                <div class="panel">
+                    <div class="panel-header flex-between">
+                        <div class="header-action">
+                            <h3><i class="fa-solid fa-clapperboard"></i> Danh Sách Phim Chiếu Rạp</h3>
+                        </div>
+                        <button class="btn btn-primary" id="btnOpenAddMovie">
+                            <i class="fa-solid fa-plus"></i> Thêm Phim Mới
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="data-table" id="moviesTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Poster</th>
+                                    <th>Tên Phim</th>
+                                    <th>Thời lượng</th>
+                                    <th>Khởi chiếu</th>
+                                    <th>Độ tuổi</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyMovies">
+                                <tr><td colspan="8" class="text-center">Đang tải danh sách phim...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 3: SHOWTIME SCHEDULING -->
+            <section id="showtimes-section" class="content-section">
+                <div class="panel">
+                    <div class="panel-header flex-between">
+                        <h3><i class="fa-solid fa-calendar-days"></i> Quản Lý Lịch Chiếu</h3>
+                        <button class="btn btn-primary" id="btnOpenAddShowtime">
+                            <i class="fa-solid fa-plus"></i> Tạo Lịch Chiếu Mới
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Phim</th>
+                                    <th>Rạp / Phòng</th>
+                                    <th>Ngày chiếu</th>
+                                    <th>Khung giờ</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyShowtimes">
+                                <tr><td colspan="6" class="text-center">Đang tải dữ liệu lịch chiếu...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 4: INVOICE MANAGEMENT -->
+            <section id="invoices-section" class="content-section">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3><i class="fa-solid fa-receipt"></i> Danh Sách Hóa Đơn Đặt Vé</h3>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã Hóa Đơn (UUID)</th>
+                                    <th>Thời gian tạo</th>
+                                    <th>Tổng tiền</th>
+                                    <th>Thành tiền</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyInvoices">
+                                <tr><td colspan="6" class="text-center">Đang tải danh sách hóa đơn...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 5: USER MANAGEMENT -->
+            <section id="users-section" class="content-section">
+                <div class="panel">
+                    <div class="panel-header flex-between">
+                        <h3><i class="fa-solid fa-users"></i> Quản Lý Tài Khoản Khách Hàng</h3>
+                        <input type="text" id="searchUser" class="form-control" placeholder="Tìm theo tên hoặc email..." style="width: 280px;">
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Họ và Tên</th>
+                                    <th>Email</th>
+                                    <th>Số điện thoại</th>
+                                    <th>Điểm Coin</th>
+                                    <th>Vai trò (Role)</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyUsers">
+                                <tr><td colspan="7" class="text-center">Đang tải danh sách tài khoản...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 6: DISCOUNT MANAGEMENT -->
+            <section id="discounts-section" class="content-section">
+                <div class="panel">
+                    <div class="panel-header flex-between">
+                        <h3><i class="fa-solid fa-ticket-simple"></i> Quản Lý Mã Giảm Giá / Voucher</h3>
+                        <button class="btn btn-primary" id="btnOpenAddDiscount">
+                            <i class="fa-solid fa-plus"></i> Thêm Voucher Mới
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tên Voucher</th>
+                                    <th>Mã Code</th>
+                                    <th>Loại</th>
+                                    <th>Giá trị</th>
+                                    <th>Khởi tạo</th>
+                                    <th>Hạn dùng</th>
+                                    <th>Đã dùng</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyDiscounts">
+                                <tr><td colspan="9" class="text-center">Đang tải danh sách mã giảm giá...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 7: PRODUCT MANAGEMENT -->
+            <section id="products-section" class="content-section">
+                <div class="panel">
+                    <div class="panel-header flex-between">
+                        <h3><i class="fa-solid fa-bowl-food"></i> Quản Lý Bắp Nước & Sản Phẩm</h3>
+                        <button class="btn btn-primary" id="btnOpenAddProduct">
+                            <i class="fa-solid fa-plus"></i> Thêm Sản Phẩm Mới
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Hình ảnh</th>
+                                    <th>Tên sản phẩm</th>
+                                    <th>Phân loại</th>
+                                    <th>Đơn giá</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyProducts">
+                                <tr><td colspan="7" class="text-center">Đang tải danh sách sản phẩm...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 8: CINEMA & ROOM MANAGEMENT -->
+            <section id="cinemas-section" class="content-section">
+                <!-- VIEW A: DANH SÁCH RẠP CHIẾU -->
+                <div class="panel" id="viewCinemasList">
+                    <div class="panel-header flex-between">
+                        <h3><i class="fa-solid fa-building"></i> Quản Lý Rạp Chiếu Phim</h3>
+                        <button class="btn btn-primary" id="btnOpenAddCinema">
+                            <i class="fa-solid fa-plus"></i> Thêm Rạp Mới
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Hình ảnh</th>
+                                    <th>Tên Rạp</th>
+                                    <th>Địa chỉ</th>
+                                    <th>Hotline</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyCinemas">
+                                <tr><td colspan="6" class="text-center">Đang tải danh sách rạp...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- VIEW B: DANH SÁCH PHÒNG CHIẾU CỦA RẠP ĐƯỢC CHỌN -->
+                <div class="panel" id="viewCinemaRooms" style="display: none;">
+                    <div class="panel-header flex-between">
+                        <div>
+                            <button class="btn btn-secondary btn-action" id="btnBackToCinemas" style="margin-bottom: 8px;">
+                                <i class="fa-solid fa-arrow-left"></i> Quay lại danh sách Rạp
+                            </button>
+                            <h3 id="currentCinemaNameTitle"><i class="fa-solid fa-door-open"></i> Danh Sách Phòng Chiếu</h3>
+                        </div>
+                        <button class="btn btn-primary" id="btnOpenAddRoom">
+                            <i class="fa-solid fa-plus"></i> Thêm Phòng Chiếu Mới
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tên Phòng Chiếu</th>
+                                    <th>Rạp Trực Thuộc</th>
+                                    <th>Định Dạng Chiếu</th>
+                                    <th>Giá Phụ Thu</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyRooms">
+                                <tr><td colspan="6" class="text-center">Vui lòng chọn rạp để xem các phòng...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- MODAL: ADD / EDIT MOVIE -->
+    <div class="modal-backdrop" id="movieModal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 id="movieModalTitle">Thêm Phim Mới</h3>
+                <button class="btn-close" id="btnCloseMovieModal">&times;</button>
+            </div>
+            <form id="formMovie">
+                <input type="hidden" id="movieId">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tên phim *</label>
+                            <input type="text" id="movieTitle" class="form-control" required placeholder="Nhập tên phim">
+                        </div>
+                        <div class="form-group">
+                            <label>Đạo diễn</label>
+                            <input type="text" id="movieDirector" class="form-control" placeholder="VD: James Cameron, Christopher Nolan">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Thời lượng (phút) *</label>
+                            <input type="number" id="movieDuration" class="form-control" required value="120">
+                        </div>
+                        <div class="form-group">
+                            <label>Giới hạn độ tuổi *</label>
+                            <select id="movieAgeRating" class="form-control">
+                                <option value="P">P - Phổ biến</option>
+                                <option value="C13">C13 - Trên 13 tuổi</option>
+                                <option value="C16">C16 - Trên 16 tuổi</option>
+                                <option value="C18">C18 - Trên 18 tuổi</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Ngày khởi chiếu</label>
+                            <input type="date" id="movieReleaseDate" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Trạng thái</label>
+                            <select id="movieStatus" class="form-control">
+                                <option value="showing">🟢 Đang chiếu (showing)</option>
+                                <option value="coming_soon">🟡 Sắp chiếu (coming_soon)</option>
+                                <option value="stopped">🔴 Ngừng chiếu (stopped)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Link Poster URL *</label>
+                        <div class="input-upload-group">
+                            <input type="text" id="moviePosterLink" class="form-control" required placeholder="https://image-url.jpg hoặc tải tệp lên">
+                            <button type="button" class="btn btn-outline-upload" id="btnUploadMoviePoster">
+                                <span class="upload-btn-text"><i class="fa-solid fa-cloud-arrow-up"></i> Chọn tệp ảnh</span>
+                            </button>
+                            <input type="file" id="moviePosterFileInput" accept="image/*" style="display: none;">
+                        </div>
+                        <div class="upload-preview-box" id="moviePosterPreviewBox" style="margin-top: 8px; display: none;">
+                            <img id="moviePosterPreviewImg" src="" alt="Poster preview" style="max-height: 120px; border-radius: 6px; border: 1px solid var(--border-color); object-fit: cover;">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Link Trailer YouTube / Video URL</label>
+                        <div class="input-upload-group">
+                            <input type="text" id="movieTrailerLink" class="form-control" placeholder="https://youtube.com/watch?v=... hoặc tải video lên">
+                            <button type="button" class="btn btn-outline-upload" id="btnUploadMovieTrailer">
+                                <span class="upload-btn-text"><i class="fa-solid fa-cloud-arrow-up"></i> Chọn video</span>
+                            </button>
+                            <input type="file" id="movieTrailerFileInput" accept="video/*" style="display: none;">
+                        </div>
+                        <div class="upload-preview-box" id="movieTrailerPreviewBox" style="margin-top: 8px; display: none;">
+                            <video id="movieTrailerPreviewVid" controls style="max-height: 140px; border-radius: 6px; border: 1px solid var(--border-color); width: 100%;"></video>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Mô tả nội dung phim</label>
+                        <textarea id="movieDescription" class="form-control" rows="3" placeholder="Tóm tắt nội dung..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btnCancelMovieModal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu Thay Đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD SHOWTIME -->
+    <div class="modal-backdrop" id="showtimeModal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3>Tạo Lịch Chiếu Mới</h3>
+                <button class="btn-close" id="btnCloseShowtimeModal">&times;</button>
+            </div>
+            <form id="formShowtime">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Chọn Phim *</label>
+                        <select id="stMovieSelect" class="form-control" required>
+                            <option value="">-- Chọn phim --</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Chọn Rạp Chiếu *</label>
+                            <select id="stCinemaSelect" class="form-control" required>
+                                <option value="">-- Chọn rạp --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Chọn Phòng Chiếu *</label>
+                            <select id="stRoomSelect" class="form-control" required>
+                                <option value="">-- Chọn phòng --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Ngày chiếu *</label>
+                        <input type="date" id="stShowDate" class="form-control" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Giờ bắt đầu *</label>
+                            <input type="time" id="stStartTime" class="form-control" required value="19:00">
+                        </div>
+                        <div class="form-group">
+                            <label>Giờ kết thúc *</label>
+                            <input type="time" id="stEndTime" class="form-control" required value="21:15">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btnCancelShowtimeModal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Tạo Lịch Chiếu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD / EDIT DISCOUNT VOUCHER -->
+    <div class="modal-backdrop" id="discountModal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 id="discountModalTitle">Thêm Mã Giảm Giá Mới</h3>
+                <button class="btn-close" id="btnCloseDiscountModal">&times;</button>
+            </div>
+            <form id="formDiscount">
+                <input type="hidden" id="discountId">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Tên Chương Trình / Voucher *</label>
+                        <input type="text" id="discountTitle" class="form-control" required placeholder="VD: Khuyến mãi Hè 2026">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Mã Code Giảm Giá *</label>
+                            <input type="text" id="discountCode" class="form-control" required placeholder="VD: SUMMERSALE20">
+                        </div>
+                        <div class="form-group">
+                            <label>Loại Giảm Giá *</label>
+                            <select id="discountType" class="form-control">
+                                <option value="percent">Phần trăm (%)</option>
+                                <option value="fixed">Số tiền cố định (VNĐ)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Giá Trị Giảm *</label>
+                            <input type="number" id="discountValue" class="form-control" required placeholder="VD: 20 (% hoặc VNĐ)">
+                        </div>
+                        <div class="form-group">
+                            <label>Số Lượt Dùng Tối Đa</label>
+                            <input type="number" id="maxUsage" class="form-control" value="100">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Ngày Bắt Đầu</label>
+                            <input type="date" id="startDate" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Ngày Kết Thúc</label>
+                            <input type="date" id="endDate" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btnCancelDiscountModal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu Thay Đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD / EDIT PRODUCT -->
+    <div class="modal-backdrop" id="productModal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 id="productModalTitle">Thêm Sản Phẩm Mới</h3>
+                <button class="btn-close" id="btnCloseProductModal">&times;</button>
+            </div>
+            <form id="formProduct">
+                <input type="hidden" id="productId">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Tên Sản Phẩm *</label>
+                        <input type="text" id="productName" class="form-control" required placeholder="VD: Combo Bắp Ngọt + 2 Pepsi">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Đơn Giá (VNĐ) *</label>
+                            <input type="number" id="productPrice" class="form-control" required placeholder="VD: 85000">
+                        </div>
+                        <div class="form-group">
+                            <label>Loại Sản Phẩm *</label>
+                            <select id="productTypeId" class="form-control">
+                                <option value="1">Combo Bắp Nước</option>
+                                <option value="2">Bắp Rang Bơ</option>
+                                <option value="3">Nước Giải Khát</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Link Hình Ảnh (URL)</label>
+                        <div class="input-upload-group">
+                            <input type="text" id="productImageUrl" class="form-control" placeholder="https://image-url.jpg hoặc chọn tệp ảnh từ máy">
+                            <button type="button" class="btn btn-outline-upload" id="btnUploadProductImage">
+                                <span class="upload-btn-text"><i class="fa-solid fa-cloud-arrow-up"></i> Chọn tệp ảnh</span>
+                            </button>
+                            <input type="file" id="productImageFileInput" accept="image/*" style="display: none;">
+                        </div>
+                        <div class="upload-preview-box" id="productImagePreviewBox" style="margin-top: 8px; display: none;">
+                            <img id="productImagePreviewImg" src="" alt="Product preview" style="max-height: 120px; border-radius: 6px; border: 1px solid var(--border-color); object-fit: cover;">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Mô tả sản phẩm</label>
+                        <textarea id="productDescription" class="form-control" rows="2" placeholder="Chi tiết gồm bắp, nước..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btnCancelProductModal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu Thay Đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD / EDIT CINEMA -->
+    <div class="modal-backdrop" id="cinemaModal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 id="cinemaModalTitle">Thêm Rạp Chiếu Mới</h3>
+                <button class="btn-close" id="btnCloseCinemaModal">&times;</button>
+            </div>
+            <form id="formCinema">
+                <input type="hidden" id="cinemaId">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Tên Rạp Chiếu *</label>
+                        <input type="text" id="cinemaName" class="form-control" required placeholder="VD: CineMax Landmark 81">
+                    </div>
+                    <div class="form-group">
+                        <label>Địa Chỉ *</label>
+                        <input type="text" id="cinemaAddress" class="form-control" required placeholder="Nhập địa chỉ rạp">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Hotline *</label>
+                            <input type="text" id="cinemaHotline" class="form-control" placeholder="VD: 1900 1234">
+                        </div>
+                        <div class="form-group">
+                            <label>Fax</label>
+                            <input type="text" id="cinemaFax" class="form-control" placeholder="VD: 028 1234 5678">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Link Hình Ảnh Rạp (URL)</label>
+                        <div class="input-upload-group">
+                            <input type="text" id="cinemaImageUrl" class="form-control" placeholder="https://image-url.jpg hoặc chọn tệp ảnh từ máy">
+                            <button type="button" class="btn btn-outline-upload" id="btnUploadCinemaImage">
+                                <span class="upload-btn-text"><i class="fa-solid fa-cloud-arrow-up"></i> Chọn tệp ảnh</span>
+                            </button>
+                            <input type="file" id="cinemaImageFileInput" accept="image/*" style="display: none;">
+                        </div>
+                        <div class="upload-preview-box" id="cinemaImagePreviewBox" style="margin-top: 8px; display: none;">
+                            <img id="cinemaImagePreviewImg" src="" alt="Cinema preview" style="max-height: 120px; border-radius: 6px; border: 1px solid var(--border-color); object-fit: cover;">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btnCancelCinemaModal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu Thay Đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD / EDIT ROOM & VISUAL 10x10 SEAT MATRIX BUILDER -->
+    <div class="modal-backdrop" id="roomModal">
+        <div class="modal-dialog" style="max-width: 900px; width: 95%;">
+            <div class="modal-header">
+                <h3 id="roomModalTitle">Thiết Lập Sơ Đồ Ghế & Cấu Hình Phòng Chiếu</h3>
+                <button class="btn-close" id="btnCloseRoomModal">&times;</button>
+            </div>
+            <form id="formRoom">
+                <input type="hidden" id="roomId">
+                <input type="hidden" id="roomCinemaId">
+                <div class="modal-body" style="gap: 20px;">
+                    <!-- THÔNG TIN PHÒNG CHIẾU -->
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group">
+                            <label>Tên Phòng Chiếu *</label>
+                            <input type="text" id="roomName" class="form-control" required placeholder="VD: Phòng 01 (IMAX)">
+                        </div>
+                        <div class="form-group">
+                            <label>Định Dạng Chiếu *</label>
+                            <select id="roomFormatSelect" class="form-control" required>
+                                <option value="">-- Chọn định dạng chiếu --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- BẢNG ĐIỀU KHIỂN SƠ ĐỒ GHẾ: PALETTE 5 LOẠI GHẾ + GIÁ VÉ & KHUNG MA TRẬN 10x10 -->
+                    <div class="seat-builder-container" style="display: grid; grid-template-columns: 310px 1fr; gap: 20px; border-top: 1px solid var(--border-color); padding-top: 16px;">
+                        
+                        <!-- CỘT TRÁI: PALETTE 5 LOẠI GHẾ & BẢNG SỬA GIÁ VÉ -->
+                        <div class="seat-types-palette">
+                            <h4 style="font-size: 14px; margin-bottom: 8px; color: var(--text-heading); display: flex; align-items: center; gap: 6px;">
+                                <i class="fa-solid fa-palette" style="color: var(--primary);"></i> 5 Loại Ghế & Giá Vé (VNĐ)
+                            </h4>
+                            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">
+                                💡 <strong>Kéo thả</strong> thẻ loại ghế vào ô ghế, hoặc <strong>click chọn</strong> loại ghế rồi quét tô màu nhanh.
+                            </p>
+
+                            <div id="seatTypesList" style="display: flex; flex-direction: column; gap: 10px;">
+                                <!-- Sẽ được render động bằng admin.js -->
+                            </div>
+                        </div>
+
+                        <!-- CỘT PHẢI: KHUNG MA TRẬN GHẾ 10x10 & MÀN CHIẾU -->
+                        <div class="seat-matrix-wrapper" style="display: flex; flex-direction: column; align-items: center;">
+                            <!-- MÀN CHIẾU (SCREEN) -->
+                            <div class="screen-arc" style="width: 85%; height: 28px; background: linear-gradient(180deg, rgba(99, 102, 241, 0.4), rgba(99, 102, 241, 0.05)); border-top: 3px solid #6366f1; border-radius: 50% 50% 0 0 / 100% 100% 0 0; text-align: center; line-height: 24px; font-size: 11px; font-weight: 700; color: #a5b4fc; letter-spacing: 2px; margin-bottom: 20px;">
+                                MÀN CHIẾU (SCREEN)
+                            </div>
+
+                            <!-- KHUNG BẢNG 10x10 (A-J x 1-10) -->
+                            <div class="seat-grid-10x10" id="seatGrid10x10">
+                                <!-- 100 ô ghế sẽ được render bằng JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btnCancelRoomModal">Hủy</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Lưu Thay Đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: INVOICE DETAIL VIEW -->
+    <div class="modal-backdrop" id="invoiceDetailModal">
+        <div class="modal-dialog" style="max-width: 650px;">
+            <div class="modal-header">
+                <h3>Chi Tiết Hóa Đơn Đặt Vé</h3>
+                <button class="btn-close" id="btnCloseInvoiceDetailModal">&times;</button>
+            </div>
+            <div class="modal-body" id="invoiceDetailBody">
+                <p class="text-center">Đang tải thông tin chi tiết hóa đơn...</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="btnOkInvoiceDetail">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin JS Client Script -->
+    <script src="../../js/admin.js"></script>
+</body>
+</html>

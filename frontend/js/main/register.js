@@ -288,6 +288,13 @@ form.addEventListener('submit', async (e) => {
         if (response.ok) {
             localStorage.setItem('username', registerData.username);
             localStorage.setItem('token', result.token);
+            const userRole = result.role || 'customer';
+            localStorage.setItem('role', userRole);
+            localStorage.setItem('user', JSON.stringify({
+                username: registerData.username,
+                role: userRole,
+                token: result.token
+            }));
 
             btnSubmit.classList.remove('loading');
             showSuccess();

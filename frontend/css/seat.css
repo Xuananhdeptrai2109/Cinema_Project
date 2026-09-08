@@ -170,21 +170,20 @@
 }
 
 /* ── SEAT TYPES ──────────────────────────────────────────── */
-/* Ghế thường — xám xanh, viền liền để phân biệt với ghế trống */
-.seat.normal  { background: #3a4a5c; border: 1.5px solid #5a7a9a; }
-.seat.normal:hover:not(.sold):not(.selected) { background: #4a5e74; border-color: #7aa0c0; }
+.seat.normal  { background: rgba(16, 185, 129, 0.2); border: 1.5px solid #10b981; }
+.seat.normal:hover:not(.sold):not(.selected) { background: rgba(16, 185, 129, 0.35); }
 
-.seat.vip     { background: rgba(255,215,0,.2);  border-color: #FFD700; }
-.seat.vip:hover:not(.sold):not(.selected)     { background: rgba(255,215,0,.35); }
+.seat.vip     { background: rgba(245, 158, 11, 0.2); border: 1.5px solid #f59e0b; }
+.seat.vip:hover:not(.sold):not(.selected)     { background: rgba(245, 158, 11, 0.35); }
 
-.seat.sweetbox { background: rgba(0,191,255,.15); border-color: #00BFFF; }
-.seat.sweetbox:hover:not(.sold):not(.selected) { background: rgba(0,191,255,.28); }
+.seat.sweetbox { background: rgba(168, 85, 247, 0.2); border: 1.5px solid #a855f7; }
+.seat.sweetbox:hover:not(.sold):not(.selected) { background: rgba(168, 85, 247, 0.35); }
 
-.seat.couple  { background: rgba(255,105,180,.15); border-color: #FF69B4; }
-.seat.couple:hover:not(.sold):not(.selected)  { background: rgba(255,105,180,.28); }
+.seat.couple  { background: rgba(236, 72, 153, 0.2); border: 1.5px solid #ec4899; }
+.seat.couple:hover:not(.sold):not(.selected)  { background: rgba(236, 72, 153, 0.35); }
 
-.seat.premium { background: rgba(138,43,226,.2); border-color: #8A2BE2; }
-.seat.premium:hover:not(.sold):not(.selected) { background: rgba(138,43,226,.35); }
+.seat.premium { background: rgba(239, 68, 68, 0.2); border: 1.5px solid #ef4444; }
+.seat.premium:hover:not(.sold):not(.selected) { background: rgba(239, 68, 68, 0.35); }
 
 /* Selected variants — tất cả dùng xanh lá */
 .seat.vip.selected,
@@ -218,36 +217,81 @@
 .state-sold     { background: #1e1e1e; border-color: #2a2a2a; opacity: .55; }
 
 /* Type icons */
-.type-normal  { background: #3a4a5c; border-color: #5a7a9a; }
-.type-vip     { background: rgba(255,215,0,.2);  border-color: #FFD700; }
-.type-sweetbox{ background: rgba(0,191,255,.15); border-color: #00BFFF; }
-.type-couple  { background: rgba(255,105,180,.15); border-color: #FF69B4; }
-.type-premium { background: rgba(138,43,226,.2); border-color: #8A2BE2; }
+.type-normal  { background: rgba(16, 185, 129, 0.25); border: 1.5px solid #10b981; color: #10b981; }
+.type-vip     { background: rgba(245, 158, 11, 0.25); border: 1.5px solid #f59e0b; color: #f59e0b; }
+.type-sweetbox{ background: rgba(168, 85, 247, 0.25); border: 1.5px solid #a855f7; color: #a855f7; }
+.type-couple  { background: rgba(236, 72, 153, 0.25); border: 1.5px solid #ec4899; color: #ec4899; }
+.type-premium { background: rgba(239, 68, 68, 0.25); border: 1.5px solid #ef4444; color: #ef4444; }
 
 /* ── RIGHT PANEL ─────────────────────────────────────────── */
 .seat-right { position: sticky; top: 88px; display: flex; flex-direction: column; gap: 14px; }
 
 /* Price card */
 .price-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); overflow: hidden;
+    background: linear-gradient(145deg, rgba(31, 41, 55, 0.9), rgba(17, 24, 39, 0.95));
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(10px);
 }
 .price-card-head {
-    padding: 12px 16px;
-    font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
-    color: var(--muted); background: rgba(255,255,255,.03);
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 7px;
+    padding: 14px 18px;
+    font-size: .82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #f3f4f6;
+    background: linear-gradient(90deg, rgba(229, 9, 20, 0.15), rgba(255, 255, 255, 0.02));
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
-.price-card-head i { color: var(--red); }
-.price-list { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
-.price-row { display: flex; align-items: center; gap: 8px; font-size: .82rem; }
-.pr-dot {
-    width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0;
-    border: 1.5px solid transparent;
+.price-card-head i { color: #e50914; font-size: 0.95rem; }
+.price-list { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.price-row-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.2s ease;
 }
-.pr-name { flex: 1; color: rgba(255,255,255,.7); }
-.pr-val  { font-weight: 700; color: #fff; font-size: .8rem; }
+.price-row-item:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: translateX(4px);
+}
+.pr-badge {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+.pr-dot-inner {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 6px currentColor;
+}
+.pr-name { flex: 1; font-size: 0.85rem; font-weight: 500; color: #e5e7eb; }
+.pr-val {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.1);
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+}
 
 /* Summary card */
 .summary-card {

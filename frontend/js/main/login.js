@@ -173,13 +173,16 @@ form.addEventListener('submit', async e => {
             localStorage.setItem('token', result.token);
             const displayName = result.username || fields.gmail.value.split('@')[0];
             localStorage.setItem('username', displayName);
+            const role = result.role || 'customer';
+            localStorage.setItem('role', role);
             localStorage.setItem('user', JSON.stringify({
                 userId: result.userId,
                 username: result.username,
+                role: role,
                 token: result.token
             }));
             btnSubmit.classList.remove('loading');
-            showSuccess();
+            showSuccess(role);
         } else {
             btnSubmit.classList.remove('loading');
             btnSubmit.disabled = false;
@@ -203,14 +206,17 @@ form.addEventListener('submit', async e => {
 // ============================================================
 // SUCCESS + REDIRECT
 // ============================================================
-function showSuccess() {
+function showSuccess(role) {
     successOverlay.classList.add('show');
     requestAnimationFrame(() => {
         successBarFill.style.width = '100%';
     });
     setTimeout(() => {
-        // Chuyển hướng về trang chủ sau khi đăng nhập thành công
-        window.location.href = 'home.html';
+        if (role === 'admin') {
+            window.location.href = 'admin/index.html';
+        } else {
+            window.location.href = 'home.html';
+        }
     }, 2800);
 }
 

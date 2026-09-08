@@ -20,6 +20,29 @@ const charCur        = document.getElementById('char-cur');
 const uploadInput    = document.getElementById('upload-file');
 const uploadPreview  = document.getElementById('upload-preview');
 
+let currentUserInfo = null;
+
+async function fetchCurrentUser() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        currentUserInfo = null;
+        return;
+    }
+    try {
+        const res = await fetch(`${API_BASE}/users/profile`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            currentUserInfo = await res.json();
+        } else {
+            currentUserInfo = null;
+        }
+    } catch (e) {
+        console.warn("Chưa tải được thông tin tài khoản người dùng:", e);
+        currentUserInfo = null;
+    }
+}
+
 // ============================================================
 // INIT & FETCH DATA
 // ============================================================
@@ -33,6 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
+        await fetchCurrentUser();
         const response = await fetch(`${API_BASE}/movies/${movieId}`);
         if (!response.ok) throw new Error('Không tìm thấy phim');
         currentMovie = await response.json();
@@ -40,9 +64,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 1. Hiển thị chi tiết phim (Hàm này sẽ tự xử lý ẩn/hiện vùng đánh giá)
         renderMovieDetail(currentMovie);
 
-        // 2. Kiểm tra trạng thái để tải bình luận[cite: 33]
+        // 2. Kiểm tra trạng thái để tải bình luận (Phim đang chiếu & Ngừng chiếu đều được xem và gửi đánh giá)
         const status = (currentMovie.status || "").toLowerCase();
-        if (status === 'showing') {
+        if (status !== 'coming_soon') {
             fetchComments(movieId);
         } else {
             allReviews = [];
@@ -83,24 +107,28 @@ async function fetchComments(movieId) {
 // ============================================================
 // SUBMIT REVIEW TO DB (BẢN SỬA LỖI MẤT DỮ LIỆU)
 // ============================================================
-btnSubmit.addEventListener('click', async () => {
-    // BƯỚC 1: "Chụp" dữ liệu ngay lập tức khi vừa nhấn nút
+btnSubmit?.addEventListener('click', async () => {
+    if (typeof clearFormError === 'function') clearFormError();
+
     const finalContent = reviewTextarea.value.trim();
     const finalRating  = selectedRating;
 
-    // BƯỚC 2: Kiểm tra dữ liệu đầu vào (Validate)
     if (finalRating === 0) {
-        alert("Vui lòng chọn số sao đánh giá!");
+        if (typeof showFormError === 'function') showFormError("Vui lòng chọn số sao trước khi gửi.");
+        else alert("Vui lòng chọn số sao đánh giá!");
         return;
     }
     if (!finalContent) {
-        alert("Vui lòng nhập nội dung bình luận!");
+        if (typeof showFormError === 'function') showFormError("Vui lòng nhập nội dung đánh giá.");
+        else alert("Vui lòng nhập nội dung bình luận!");
+        reviewTextarea.focus();
         return;
     }
 
     const token = localStorage.getItem('token');
     if (!token) {
-        alert("Bạn cần đăng nhập để thực hiện tác vụ này!");
+        alert("Bạn cần đăng nhập để thực hiện tác vụ gửi đánh giá!");
+        window.location.href = 'login.html';
         return;
     }
 
@@ -108,7 +136,6 @@ btnSubmit.addEventListener('click', async () => {
         btnSubmit.disabled = true;
         btnSubmit.textContent = 'Đang xử lý...';
 
-        // BƯỚC 3: Xử lý ảnh sang Base64 (Nếu có)
         let base64Img = null;
         if (uploadedFile) {
             base64Img = await new Promise((resolve) => {
@@ -118,15 +145,13 @@ btnSubmit.addEventListener('click', async () => {
             });
         }
 
-        // BƯỚC 4: Đóng gói dữ liệu (Ảnh luôn để cuối cùng)
         const commentData = {
             movieId: currentMovie.id,
-            starRating: finalRating, // Dùng giá trị đã "chụp" ở Bước 1
-            content: finalContent,   // Dùng giá trị đã "chụp" ở Bước 1
-            imageUrl: base64Img      // Dữ liệu ảnh khổng lồ ở cuối
+            starRating: finalRating,
+            content: finalContent,
+            imageUrl: base64Img
         };
 
-        // BƯỚC 5: Gửi lên Server
         const response = await fetch(`${API_BASE}/comments`, {
             method: 'POST',
             headers: {
@@ -137,25 +162,54 @@ btnSubmit.addEventListener('click', async () => {
         });
 
         if (response.ok) {
-            // CHỈ RESET FORM KHI ĐÃ GỬI THÀNH CÔNG
             reviewTextarea.value = '';
             selectedRating = 0;
-            updateStars(0);
+            if (typeof updateStars === 'function') updateStars(0, 'selected');
+            if (starHint) {
+                starHint.textContent = 'Chưa chọn';
+                starHint.style.color = '';
+            }
+            if (charCur) charCur.textContent = '0';
             uploadedFile = null;
+            if (uploadInput) uploadInput.value = '';
             if (uploadPreview) uploadPreview.innerHTML = '';
 
-            // Tải lại danh sách bình luận
-            fetchComments(currentMovie.id);
+            btnSubmit.textContent = '✓ Đã gửi!';
+            btnSubmit.style.background = '#00c853';
+
+            await fetchComments(currentMovie.id);
+
+            // Cập nhật lại điểm trung bình sao của phim từ DB
+            const movieRes = await fetch(`${API_BASE}/movies/${currentMovie.id}`);
+            if (movieRes.ok) {
+                const updatedMovie = await movieRes.json();
+                currentMovie.star = updatedMovie.star;
+                const avgScoreEl = document.querySelector('.avg-score');
+                const starContainer = document.getElementById('avg-stars');
+                if (avgScoreEl) avgScoreEl.textContent = updatedMovie.star ? updatedMovie.star.toFixed(1) : '0.0';
+                if (starContainer) starContainer.innerHTML = buildStarHTML(updatedMovie.star || 0);
+            }
         } else {
-            const err = await response.text();
+            let errorText = "Gửi bình luận thất bại.";
+            try {
+                const errJson = await response.json();
+                errorText = errJson.message || errorText;
+            } catch (e) {
+                errorText = await response.text() || errorText;
+            }
+            if (typeof showFormError === 'function') showFormError(errorText);
+            else alert(errorText);
         }
 
     } catch (error) {
-        console.error("Lỗi kết nối:", error);
+        console.error("Lỗi kết nối khi gửi bình luận:", error);
         alert("Không thể kết nối đến máy chủ.");
     } finally {
-        btnSubmit.disabled = false;
-        btnSubmit.innerHTML = '<i class="fas fa-paper-plane"></i> Gửi đánh giá';
+        setTimeout(() => {
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = '<i class="fas fa-paper-plane"></i> Gửi đánh giá';
+            btnSubmit.style.background = '';
+        }, 1500);
     }
 });
 
@@ -219,8 +273,28 @@ function renderMovieDetail(movie) {
     if (actorsEl && movie.performerNames) actorsEl.textContent = movie.performerNames.join(', ');
 
     const trailerIframe = document.getElementById('trailer-iframe');
-    if (trailerIframe && movie.trailerLink) {
-        trailerIframe.dataset.src = `https://www.youtube.com/embed/${extractVideoID(movie.trailerLink)}?autoplay=1`;
+    const trailerVideo = document.getElementById('trailer-video');
+    const openTrailerBtn = document.getElementById('open-trailer');
+    const modalMovieName = document.getElementById('modal-movie-name');
+
+    if (modalMovieName) modalMovieName.textContent = movie.title;
+
+    if (movie.trailerLink && movie.trailerLink.trim() !== '') {
+        if (openTrailerBtn) openTrailerBtn.style.display = 'inline-flex';
+        
+        const link = movie.trailerLink.trim();
+        const ytId = extractVideoID(link);
+
+        if (isYouTubeUrl(link) && ytId) {
+            if (trailerIframe) trailerIframe.dataset.src = `https://www.youtube.com/embed/${ytId}?autoplay=1`;
+            if (trailerVideo) trailerVideo.dataset.src = '';
+        } else {
+            const fullUrl = getFullMediaUrl(link);
+            if (trailerVideo) trailerVideo.dataset.src = fullUrl;
+            if (trailerIframe) trailerIframe.dataset.src = '';
+        }
+    } else {
+        if (openTrailerBtn) openTrailerBtn.style.display = 'none';
     }
 
     const btnTicket = document.querySelector('.btn-ticket-main');
@@ -292,10 +366,25 @@ function buildStarHTML(rating) {
     return html;
 }
 
+function isYouTubeUrl(url) {
+    if (!url) return false;
+    return url.includes('youtube.com') || url.includes('youtu.be');
+}
+
 function extractVideoID(url) {
+    if (!url) return '';
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
     const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : 'dQw4w9WgXcQ';
+    return (match && match[2].length === 11) ? match[2] : '';
+}
+
+function getFullMediaUrl(url) {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+        return url;
+    }
+    const cleanPath = url.replace(/^\//, '');
+    return `http://localhost:8080/${cleanPath}`;
 }
 
 function generateAvatar(name) {
@@ -314,17 +403,51 @@ function avatarColor(name) {
 const trailerModal  = document.getElementById('trailer-modal');
 const openTrailerBtn = document.getElementById('open-trailer');
 const closeTrailerBtn = document.getElementById('close-trailer');
-const trailerIframe = document.getElementById('trailer-iframe');
 
 function openTrailer() {
-    trailerIframe.src = trailerIframe.dataset.src;
+    const iframe = document.getElementById('trailer-iframe');
+    const video = document.getElementById('trailer-video');
+
+    if (iframe && iframe.dataset.src) {
+        iframe.src = iframe.dataset.src;
+        iframe.style.display = 'block';
+        if (video) {
+            video.pause();
+            video.src = '';
+            video.style.display = 'none';
+        }
+    } else if (video && video.dataset.src) {
+        video.src = video.dataset.src;
+        video.style.display = 'block';
+        video.play().catch(e => console.log('Autoplay video error:', e));
+        if (iframe) {
+            iframe.src = '';
+            iframe.style.display = 'none';
+        }
+    } else {
+        alert("Phim này chưa có video trailer!");
+        return;
+    }
+
     trailerModal.classList.add('open');
     document.body.style.overflow = 'hidden';
 }
 
 function closeTrailer() {
+    const iframe = document.getElementById('trailer-iframe');
+    const video = document.getElementById('trailer-video');
+
     trailerModal.classList.remove('open');
-    trailerIframe.src = '';  // stop video
+
+    if (iframe) {
+        iframe.src = '';
+        iframe.style.display = 'none';
+    }
+    if (video) {
+        video.pause();
+        video.src = '';
+        video.style.display = 'none';
+    }
     document.body.style.overflow = '';
 }
 
@@ -459,66 +582,7 @@ function showFormError(msg) {
 }
 function clearFormError() { formError.innerHTML = ''; }
 
-btnSubmit.addEventListener('click', () => {
-    clearFormError();
 
-    if (!selectedRating) {
-        showFormError('Vui lòng chọn số sao trước khi gửi.');
-        starPicker.style.animation = 'none';
-        starPicker.offsetHeight;
-        starPicker.style.animation = 'shake .35s ease';
-        return;
-    }
-    if (!reviewTextarea.value.trim()) {
-        showFormError('Vui lòng nhập nội dung đánh giá.');
-        reviewTextarea.focus();
-        return;
-    }
-
-    // Build new review
-    const now = new Date();
-    const dateStr = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}`;
-
-    const newReview = {
-        name:   'Bạn',
-        rating: selectedRating,
-        text:   reviewTextarea.value.trim(),
-        date:   dateStr,
-        media:  uploadedFile ? [{ type: uploadedFile.type, url: URL.createObjectURL(uploadedFile) }] : [],
-        isNew:  true,
-    };
-
-    // Prepend to list
-    allReviews.unshift(newReview);
-    renderReviews();
-
-    // Scroll to reviews list
-    document.getElementById('reviews-scroll').scrollTo({ top: 0, behavior: 'smooth' });
-
-    // Reset form
-    selectedRating = 0;
-    updateStars(0, 'selected');
-    starHint.textContent = 'Chưa chọn';
-    starHint.style.color = '';
-    reviewTextarea.value = '';
-    charCur.textContent  = '0';
-    uploadedFile  = null;
-    uploadInput.value    = '';
-    uploadPreview.innerHTML = '';
-
-    const countEl = document.getElementById('review-count');
-    if (countEl) {
-        countEl.textContent = allReviews.length;
-    }
-
-    // Success flash
-    btnSubmit.textContent = '✓ Đã gửi!';
-    btnSubmit.style.background = '#00c853';
-    setTimeout(() => {
-        btnSubmit.innerHTML = '<i class="fas fa-paper-plane"></i> Gửi đánh giá';
-        btnSubmit.style.background = '';
-    }, 2000);
-});
 
 // ============================================================
 // RENDER REVIEWS
@@ -549,10 +613,27 @@ function renderReviews() {
     }
 
     // 5. Vẽ danh sách bình luận thực tế
+    const myEmail = currentUserInfo ? currentUserInfo.email : null;
+    const myUserName = currentUserInfo ? currentUserInfo.userName : null;
+    const myRole = currentUserInfo ? (currentUserInfo.role || '').toLowerCase() : '';
+
     reviewsScroll.innerHTML = sorted.map((r, i) => {
         const starsHTML = buildStarHTML(r.starRating);
         const mediaHTML = r.imageUrl ? `<div class="ri-media"><img src="${r.imageUrl}" alt="review-img" /></div>` : '';
         const dateStr = r.createdAt ? new Date(r.createdAt).toLocaleDateString('vi-VN') : 'Vừa xong';
+
+        // CHỈ HIỂN THỊ NÚT XÓA NẾU NGƯỜI DÙNG ĐÃ ĐĂNG NHẬP VÀ LÀ CHÍNH CHỦ BÌNH LUẬN (HOẶC ADMIN)
+        const isMyComment = currentUserInfo && (
+            (myEmail && r.email && myEmail.toLowerCase() === r.email.toLowerCase()) ||
+            (myUserName && r.userName && myUserName.toLowerCase() === r.userName.toLowerCase()) ||
+            myRole === 'admin' || myRole === 'role_admin'
+        );
+
+        const deleteBtnHTML = isMyComment && r.commentId ? `
+            <button class="btn-delete-comment" onclick="deleteComment(${r.commentId})" title="Xóa đánh giá này">
+                <i class="fas fa-times"></i>
+            </button>
+        ` : '';
 
         return `
       <div class="review-item" style="animation-delay:${Math.min(i * 0.05, 0.3)}s">
@@ -560,10 +641,13 @@ function renderReviews() {
             ${(r.userName || 'U').charAt(0).toUpperCase()}
         </div>
         <div class="ri-body">
-          <div class="ri-top">
+          <div class="ri-top" style="display: flex; align-items: center; justify-content: space-between;">
             <span class="ri-name">${r.fullName || 'Người dùng'} <small>(@${r.userName})</small></span>
-            <div class="ri-stars">${starsHTML}</div>
-            <span class="ri-date">${dateStr}</span>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="ri-stars">${starsHTML}</div>
+                <span class="ri-date">${dateStr}</span>
+                ${deleteBtnHTML}
+            </div>
           </div>
           <p class="ri-text">${r.content}</p>
           ${mediaHTML}
@@ -587,6 +671,54 @@ function renderReviews() {
     const countEl = document.getElementById('review-count');
     if (countEl) countEl.textContent = sorted.length;
 }
+
+window.deleteComment = async function(commentId) {
+    if (!commentId) return;
+    if (!confirm("Bạn có chắc chắn muốn xóa bình luận này không?")) return;
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        alert("Vui lòng đăng nhập để thực hiện tác vụ này.");
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/comments/${commentId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (res.ok) {
+            alert("Đã xóa bình luận thành công!");
+            await fetchComments(currentMovie.id);
+
+            // Cập nhật lại điểm sao trung bình của phim
+            const movieRes = await fetch(`${API_BASE}/movies/${currentMovie.id}`);
+            if (movieRes.ok) {
+                const updatedMovie = await movieRes.json();
+                currentMovie.star = updatedMovie.star;
+                const avgScoreEl = document.querySelector('.avg-score');
+                const starContainer = document.getElementById('avg-stars');
+                if (avgScoreEl) avgScoreEl.textContent = updatedMovie.star ? updatedMovie.star.toFixed(1) : '0.0';
+                if (starContainer) starContainer.innerHTML = buildStarHTML(updatedMovie.star || 0);
+            }
+        } else {
+            let errMsg = "Không thể xóa bình luận này.";
+            try {
+                const errData = await res.json();
+                errMsg = errData.message || errMsg;
+            } catch (e) {
+                errMsg = await res.text() || errMsg;
+            }
+            alert(errMsg);
+        }
+    } catch (e) {
+        console.error("Lỗi khi xóa bình luận:", e);
+        alert("Lỗi kết nối máy chủ khi xóa bình luận.");
+    }
+};
 
 // Lắng nghe sự kiện thay đổi kiểu sắp xếp
 const sortSelect = document.getElementById('reviews-sort');

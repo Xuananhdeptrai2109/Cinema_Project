@@ -514,6 +514,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Lấy thông tin từ localStorage (đã lưu ở bước đăng ký/đăng nhập)
     const storedUsername = localStorage.getItem('username');
+    const storedRole = localStorage.getItem('role');
 
     if (storedUsername) {
         // Đã đăng nhập: Hiện tên, ẩn nút login
@@ -521,6 +522,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (userZone) {
             userZone.style.display = 'flex';
             displayUsername.textContent = storedUsername;
+
+            const adminLink = document.getElementById('admin-btn-link');
+            if (storedRole === 'admin') {
+                if (!adminLink) {
+                    const adminBtn = document.createElement('a');
+                    adminBtn.id = 'admin-btn-link';
+                    adminBtn.href = 'admin/index.html';
+                    adminBtn.style.cssText = 'color:#6366f1; border:1px solid #6366f1; padding:6px 14px; border-radius:20px; text-decoration:none; font-size:13px; font-weight:600; display:inline-flex; align-items:center; gap:6px;';
+                    adminBtn.innerHTML = '<i class="fas fa-shield-halved"></i> Trang Admin';
+                    userZone.insertBefore(adminBtn, userZone.firstChild);
+                }
+            } else {
+                if (adminLink) adminLink.remove();
+            }
         }
     } else {
         // Chưa đăng nhập: Hiện nút login, ẩn vùng user
@@ -536,6 +551,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // 1. Xóa toàn bộ thông tin đăng nhập đã lưu
             localStorage.removeItem('username');
             localStorage.removeItem('token');
+            localStorage.removeItem('role');
+            localStorage.removeItem('user');
 
             // 2. Xóa các thông tin đặt vé tạm thời (nếu có) để tránh xung đột dữ liệu
             sessionStorage.removeItem('tempBookingInfo');
