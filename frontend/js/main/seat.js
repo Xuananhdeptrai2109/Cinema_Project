@@ -13,11 +13,11 @@ let seatData = [];      // Danh sách ghế từ API
 let selectedSeats = new Set(); // Lưu showtime_seat_id
 
 const TYPE_COLORS = {
-    normal:   '#555',
-    vip:      '#FFD700',
-    sweetbox: '#00BFFF',
-    couple:   '#FF69B4',
-    premium:  '#8A2BE2',
+    normal:   '#10b981',
+    vip:      '#f59e0b',
+    sweetbox: '#a855f7',
+    couple:   '#ec4899',
+    premium:  '#ef4444',
 };
 // ============================================================
 // API CALLS
@@ -130,35 +130,67 @@ function renderGrid() {
     });
 }
 
-function renderPriceTable() {
+async function renderPriceTable() {
     const priceListEl = document.getElementById('price-list-db');
-    if (!priceListEl || !seatData || seatData.length === 0) return;
+    if (!priceListEl) return;
 
-    const uniqueTypes = [];
-    const seenTypes = new Set();
+    let dbTypes = [];
 
-    seatData.forEach(s => {
-        if (!seenTypes.has(s.typeName)) {
-            seenTypes.add(s.typeName);
-            uniqueTypes.push({
-                name: s.typeName,
-                price: s.price
-            });
+    // 1. Thử gọi API lấy danh sách loại ghế thực tế từ CSDL
+    try {
+        const res = await fetch(`${API_BASE}/seat-types`);
+        if (res.ok) {
+            dbTypes = await res.json();
         }
-    });
+    } catch (e) {
+        console.warn("Lỗi đọc /api/seat-types từ DB:", e);
+    }
 
-    uniqueTypes.sort((a, b) => a.price - b.price);
+    // 2. Tra cứu thêm từ dữ liệu ghế thực tế của suất chiếu
+    const priceMap = new Map();
+    if (seatData && seatData.length > 0) {
+        seatData.forEach(s => {
+            if (s.typeName && s.price) {
+                priceMap.set(s.typeName.toLowerCase().trim(), s.price);
+            }
+        });
+    }
 
-    // SỬA TẠI ĐÂY: Thêm class màu vào thẻ span
-    priceListEl.innerHTML = uniqueTypes.map(type => {
-        // Lấy class màu (ví dụ: 'vip', 'normal', 'sweetbox')
+    let finalTypes = [];
+
+    if (dbTypes && dbTypes.length > 0) {
+        finalTypes = dbTypes.map(t => {
+            const normName = t.typeName.toLowerCase().trim();
+            const realPrice = priceMap.get(normName) || t.price || 0;
+            return {
+                name: t.typeName,
+                price: realPrice
+            };
+        });
+    } else if (seatData && seatData.length > 0) {
+        const seen = new Set();
+        seatData.forEach(s => {
+            if (s.typeName && !seen.has(s.typeName)) {
+                seen.add(s.typeName);
+                finalTypes.push({
+                    name: s.typeName,
+                    price: s.price || 0
+                });
+            }
+        });
+    }
+
+    finalTypes.sort((a, b) => a.price - b.price);
+
+    priceListEl.innerHTML = finalTypes.map(type => {
         const colorClass = mapTypeToClass(type.name, 'price');
-
         return `
-            <div class="price-row">
-                <span class="pr-dot ${colorClass}"></span> 
+            <div class="price-row-item">
+                <div class="pr-badge ${colorClass}">
+                    <span class="pr-dot-inner"></span>
+                </div>
                 <span class="pr-name">${type.name}</span>
-                <span class="pr-val">${type.price.toLocaleString('vi-VN')}đ</span>
+                <span class="pr-val">${(type.price || 0).toLocaleString('vi-VN')}đ</span>
             </div>
         `;
     }).join('');
@@ -168,13 +200,18 @@ function renderPriceTable() {
 function mapTypeToClass(typeName, target = 'seat') {
     if (!typeName) return target === 'seat' ? 'normal' : 'type-normal';
 
-    const name = typeName.toLowerCase();
+    const name = typeName.toLowerCase().trim();
     let baseClass = 'normal';
 
-    if (name.includes('vip')) baseClass = 'vip';
-    else if (name.includes('sweetbox') || name.includes('sweet box')) baseClass = 'sweetbox';
-    else if (name.includes('couple')) baseClass = 'couple';
-    else if (name.includes('cao cấp') || name.includes('premium')) baseClass = 'premium';
+    if (name.includes('vip')) {
+        baseClass = 'vip';
+    } else if (name.includes('sweetbox') || name.includes('sweet box') || name.includes('sweet')) {
+        baseClass = 'sweetbox';
+    } else if (name.includes('couple') || name.includes('đôi') || name.includes('doi')) {
+        baseClass = 'couple';
+    } else if (name.includes('cao cấp') || name.includes('cao cap') || name.includes('cao') || name.includes('premium') || name.includes('deluxe')) {
+        baseClass = 'premium';
+    }
 
     // Nếu dùng cho ghế thì trả về 'vip', nếu dùng cho bảng giá thì trả về 'type-vip'
     return target === 'seat' ? baseClass : `type-${baseClass}`;
@@ -239,10 +276,10 @@ function updateSummary() {
     let total = 0;
     const html = selectedDetails.map(s => {
         total += s.price;
-        const color = TYPE_COLORS[mapTypeToClass(s.typeName)];
+        const colorClass = mapTypeToClass(s.typeName, 'price');
         return `
             <div class="breakdown-row">
-                <span class="pr-dot" style="background:${color}33; border-color:${color}; width:10px; height:10px; border-radius:3px; display:inline-block;"></span>
+                <span class="pr-dot ${colorClass}" style="width:12px; height:12px; border-radius:3px; display:inline-block; flex-shrink:0;"></span>
                 <span>Ghế ${s.rowName}${s.seatNumber} (${s.typeName})</span>
                 <span>${s.price.toLocaleString('vi-VN')}đ</span>
             </div>`;

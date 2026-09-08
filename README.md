@@ -153,10 +153,10 @@ Nghiệp vụ giữ ghế, đặt vé và thanh toán được đóng gói và x
 
 ## 👥 Tài khoản Thử nghiệm (Mặc định)
 
-| Vai trò | Username | Password |
+| Vai trò | Username | Password | Email
 |---|---|---|
-| **Admin** | `admin` | `admin123` |
-| **Khách hàng** | `customer` | `123456` |
+| **Super Admin** | `admin` | `123456` | `admin@gmail.com`
+| **Khách hàng** | `userA` | `123456` | `nguyenvana@gmail.com`
 
 ---
 

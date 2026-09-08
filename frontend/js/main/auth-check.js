@@ -22,5 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function logout() {
     localStorage.removeItem('username');
     localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('user');
     window.location.reload(); // Load lại trang để cập nhật giao diện
 }
